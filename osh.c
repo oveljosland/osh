@@ -1,11 +1,14 @@
 #include <stdio.h>
-
-#define EXIT_SUCC 0
-#define EXIT_FAIL 1
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+#include <sys/wait.h> /* waitpd */
 
 void loop(void);
 char *readline(void);
 char **splitline(char*);
+int execc(char **);
+
 
 int main(int argc, char **argv)
 {
@@ -13,7 +16,7 @@ int main(int argc, char **argv)
 
 	loop();
 
-	return EXIT_SUCC;
+	return EXIT_SUCCESS;
 }
 
 /*
@@ -47,7 +50,7 @@ char *readline(void)
 	
 	if (!buf) {
 		fprintf(stderr, "osh: alloc error\n");
-		exit(EXIT_FAIL);
+		exit(EXIT_FAILURE);
 	}
 
 	i = 0;
@@ -63,7 +66,7 @@ char *readline(void)
 			buf = realloc(buf, bufsiz);
 			if (!buf) {
 				fprintf(stderr, "osh: alloc error\n");
-				exit(EXIT_FAIL);
+				exit(EXIT_FAILURE);
 			}
 		}
 	}
@@ -79,7 +82,7 @@ char **splitline(char *line)
 
 	if (!toks) {
 		fprintf(stderr, "osh: alloc error\n");
-		exit(EXIT_FAIL);
+		exit(EXIT_FAILURE);
 	}
 
 	tok = strtok(line, TOK_DELIM);
@@ -91,7 +94,7 @@ char **splitline(char *line)
 			toks = realloc(toks, sizeof(char*) * bufsiz);
 			if (!toks) {
 				fprintf(stderr, "osh: alloc error\n");
-				exit(EXIT_FAIL);
+				exit(EXIT_FAILURE);
 			}
 		}
 		tok = strtok(NULL, TOK_DELIM);
@@ -100,5 +103,23 @@ char **splitline(char *line)
 	return toks;
 }
 
+int execc(char **args)
+{
+	pid_t pid, wpid;
+	int status;
 
-
+	pid = fork();
+	if (pid == 0) {
+		/* child */
+		if (execvp(args[0], args) == -1)
+			perror("osh");
+		exit(EXIT_FAILURE);
+	}
+	else if (pid < 0)
+		perror("osh");
+	else
+		do {
+			wpid = waitpid(pid, &status, WUNTRACED);
+		} while (!WIFEXITED(status) && !WIFSIGNALED(status));A
+	return 1;
+}
