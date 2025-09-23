@@ -7,12 +7,18 @@
 void loop(void);
 char *readline(void);
 char **splitline(char*);
-int execc(char **);
-
+int _run(char **);
+int _exec(char **);
 
 int main(int argc, char **argv)
 {
-	/* TODO: config file loader */
+	/*
+	 * TODO:
+	 * pipes
+	 * config loader
+	 * more included routines
+	 */
+
 
 	loop();
 
@@ -35,18 +41,19 @@ void loop(void)
 		printf("$ ");
 		line = readline();
 		args = splitline(line);
-		status = exec(args);
+		status = _exec(args);
 
 		free(line);
 		free(args);
 	} while (status);
 }
 
-#define BUFSIZ (1<<10)
+
+#define BUFSIZE (1<<10)
 char *readline(void)
 {
-	int i, c, bufsiz = BUFSIZ;
-	char *buf = malloc(sizeof(char) * bufsiz);
+	int i, c, bufsize = BUFSIZE;
+	char *buf = malloc(sizeof(char) * bufsize);
 	
 	if (!buf) {
 		fprintf(stderr, "osh: alloc error\n");
@@ -55,15 +62,17 @@ char *readline(void)
 
 	i = 0;
 	while (1) { /* basically 'getline' */
-		if ((c = getchar()) == EOF || c == '\n')
-			buf[i] = '\0'; return  buf;
+		if ((c = getchar()) == EOF || c == '\n') {
+			buf[i] = '\0';
+			return  buf;
+		}	
 		else
 			buf[i] = c;
 		i++;
 
-		if (i >= bufsiz) {
+		if (i >= bufsize) {
 			buf += BUFSIZE;
-			buf = realloc(buf, bufsiz);
+			buf = realloc(buf, bufsize);
 			if (!buf) {
 				fprintf(stderr, "osh: alloc error\n");
 				exit(EXIT_FAILURE);
@@ -72,12 +81,13 @@ char *readline(void)
 	}
 }
 
-#define TOK_BUFSIZ (1<<6)
-#define TOK_DELIM " \t\r\n\a"
+
+#define TOK_BUFSIZE (1<<6)
+#define TOK_DELIMS " \t\r\n\a"
 char **splitline(char *line)
 {
-	int bufsiz = TOK_BUFSIZ, i = 0;
-	char **toks = malloc(sizeof(char*) * bufsiz);
+	int bufsize = TOK_BUFSIZE, i = 0;
+	char **toks = malloc(sizeof(char*) * bufsize);
 	char *tok;
 
 	if (!toks) {
@@ -85,25 +95,25 @@ char **splitline(char *line)
 		exit(EXIT_FAILURE);
 	}
 
-	tok = strtok(line, TOK_DELIM);
+	tok = strtok(line, TOK_DELIMS);
 	while (tok != NULL) {
 		toks[i] = tok;
 		i++;
-		if (i >= bufsiz) {
-			bufsiz += TOK_BUFSIZ;
-			toks = realloc(toks, sizeof(char*) * bufsiz);
+		if (i >= bufsize) {
+			bufsize += TOK_BUFSIZE;
+			toks = realloc(toks, sizeof(char*) * bufsize);
 			if (!toks) {
 				fprintf(stderr, "osh: alloc error\n");
 				exit(EXIT_FAILURE);
 			}
 		}
-		tok = strtok(NULL, TOK_DELIM);
+		tok = strtok(NULL, TOK_DELIMS);
 	}
 	toks[i] = NULL;
 	return toks;
 }
 
-int execc(char **args)
+int _run(char **args)
 {
 	pid_t pid, wpid;
 	int status;
@@ -122,4 +132,58 @@ int execc(char **args)
 			wpid = waitpid(pid, &status, WUNTRACED);
 		} while (!WIFEXITED(status) && !WIFSIGNALED(status));
 	return 1;
+}
+
+
+int _cd(char **);
+int _help(char **);
+int shexit(char **);
+
+char *builtins[] = {"cd", "help", "exit"};
+
+int (*rptr[]) (char**) = {&_cd, &_help, &shexit};
+
+/* static */
+static inline int num_builtins()
+{
+	return sizeof(builtins) / sizeof(char *);
+}
+
+/* implementations */
+int _cd(char **args)
+{
+	if (args[1] == NULL)
+		fprintf(stderr, "osh: expected argument to \"cd\"\n");
+	else
+		if (chdir(args[1]) != 0)
+			perror("osh");
+	return 1;
+}
+
+int _help(char **args)
+{
+	int i;
+
+	printf("osh: enter program and arguments to execute\n");
+	printf("built in:\n");
+	for (i = 0; i < num_builtins(); i++)
+		printf("\t%s\n", builtins[i]);
+	return 1;
+}
+
+int shexit(char **args)
+{
+	return 0;
+}
+
+int _exec(char **args)
+{
+	int i;
+
+	if (args[0] == NULL) return 1; /* empty cmd */
+
+	for (i = 0; i < num_builtins(); i++)
+		if (strcmp(args[0], builtins[i]) == 0)
+			return (*rptr[i])(args);
+	return _run(args);
 }
