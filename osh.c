@@ -71,7 +71,7 @@ char *readline(void)
 		i++;
 
 		if (i >= bufsize) {
-			buf += BUFSIZE;
+			bufsize += BUFSIZE;
 			buf = realloc(buf, bufsize);
 			if (!buf) {
 				fprintf(stderr, "osh: alloc error\n");
