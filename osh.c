@@ -120,6 +120,6 @@ int execc(char **args)
 	else
 		do {
 			wpid = waitpid(pid, &status, WUNTRACED);
-		} while (!WIFEXITED(status) && !WIFSIGNALED(status));A
+		} while (!WIFEXITED(status) && !WIFSIGNALED(status));
 	return 1;
 }
