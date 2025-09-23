@@ -2,23 +2,18 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include <sys/wait.h> /* waitpd */
+#include <sys/wait.h> /* waitpid */
 
-void loop(void);
-char *readline(void);
-char **splitline(char*);
-int _run(char **);
-int _exec(char **);
+void loop();
 
 int main(int argc, char **argv)
 {
 	/*
 	 * TODO:
-	 * pipes
+	 * pipes pubs.opengroup.org/onlinepubs/9799919799/functions/pipe.html
 	 * config loader
 	 * more included routines
 	 */
-
 
 	loop();
 
@@ -31,6 +26,12 @@ int main(int argc, char **argv)
  * parse input
  * execute command
  */
+
+
+char *readline();
+char **splitline(char*);
+int _exec(char **);
+
 void loop(void)
 {
 	int status;
