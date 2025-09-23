@@ -1,34 +1,36 @@
-# Prerequisites
+osh
+
+# prerequisites
 *.d
 
-# Object files
+# object files
 *.o
 *.ko
 *.obj
 *.elf
 
-# Linker output
+# linker output
 *.ilk
 *.map
 *.exp
 
-# Precompiled Headers
+# precompiled headers
 *.gch
 *.pch
 
-# Libraries
+# libraries
 *.lib
 *.a
 *.la
 *.lo
 
-# Shared objects (inc. Windows DLLs)
+# shared objects
 *.dll
 *.so
 *.so.*
 *.dylib
 
-# Executables
+# executables
 *.exe
 *.out
 *.app
@@ -36,13 +38,13 @@
 *.x86_64
 *.hex
 
-# Debug files
+# debug files
 *.dSYM/
 *.su
 *.idb
 *.pdb
 
-# Kernel Module Compile Results
+# kernel module compile results
 *.mod*
 *.cmd
 .tmp_versions/
