@@ -5,6 +5,7 @@
 
 void loop(void);
 char *readline(void);
+char **splitline(char*);
 
 int main(int argc, char **argv)
 {
@@ -98,3 +99,6 @@ char **splitline(char *line)
 	toks[i] = NULL;
 	return toks;
 }
+
+
+
