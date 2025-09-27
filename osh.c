@@ -11,8 +11,7 @@ int main(int argc, char **argv)
 	/*
 	 * TODO:
 	 * pipes pubs.opengroup.org/onlinepubs/9799919799/functions/pipe.html
-	 * config loader
-	 * more included routines
+	 * config loader?
 	 */
 
 	loop();
@@ -30,7 +29,7 @@ int main(int argc, char **argv)
 
 char *readline();
 char **splitline(char*);
-int _exec(char **);
+int sh_exec(char **);
 
 void loop(void)
 {
@@ -42,7 +41,7 @@ void loop(void)
 		printf("$ ");
 		line = readline();
 		args = splitline(line);
-		status = _exec(args);
+		status = sh_exec(args);
 
 		free(line);
 		free(args);
@@ -114,7 +113,8 @@ char **splitline(char *line)
 	return toks;
 }
 
-int _run(char **args)
+/* sh_runext: run external command */
+int sh_runext(char **args)
 {
 	pid_t pid, wpid;
 	int status;
@@ -136,22 +136,22 @@ int _run(char **args)
 }
 
 
-int _cd(char **);
-int _help(char **);
-int shexit(char **);
+int sh_bicd(char **);
+int sh_help(char **);
+int sh_exit(char **);
 
 char *builtins[] = {"cd", "help", "exit"};
 
-int (*rptr[]) (char**) = {&_cd, &_help, &shexit};
+int (*rptr[]) (char**) = {&sh_bicd, &sh_help, &sh_exit};
 
-/* static */
-static inline int num_builtins()
+/* numbi: returns number of built-in routines */
+static inline int numbi()
 {
 	return sizeof(builtins) / sizeof(char *);
 }
 
-/* implementations */
-int _cd(char **args)
+/* sh_bicd: built-in 'cd' routine */
+int sh_bicd(char **args)
 {
 	if (args[1] == NULL)
 		fprintf(stderr, "osh: expected argument to \"cd\"\n");
@@ -161,30 +161,34 @@ int _cd(char **args)
 	return 1;
 }
 
-int _help(char **args)
+/* sh_help: print information about the program */
+int sh_help(char **args)
 {
 	int i;
 
-	printf("osh: enter program and arguments to execute\n");
-	printf("built in:\n");
-	for (i = 0; i < num_builtins(); i++)
+	printf("osh: enter cmd and args to run\n");
+	printf("built in routines:\n");
+	for (i = 0; i < numbi(); i++)
 		printf("\t%s\n", builtins[i]);
 	return 1;
 }
 
-int shexit(char **args)
+/* sh_exit: exit the shell */
+int sh_exit(char **args)
 {
 	return 0;
 }
 
-int _exec(char **args)
+/* sh_exec: execute shell command */
+int sh_exec(char **args)
 {
 	int i;
 
 	if (args[0] == NULL) return 1; /* empty cmd */
 
-	for (i = 0; i < num_builtins(); i++)
+	for (i = 0; i < numbi(); i++)
 		if (strcmp(args[0], builtins[i]) == 0)
 			return (*rptr[i])(args);
-	return _run(args);
+	return sh_runext(args);
 }
+
